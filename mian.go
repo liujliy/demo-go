@@ -4,22 +4,30 @@ import (
 	"fmt"
 	"image/color"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"strings"
 )
 
 func main() {
-	fmt.Println("Hello Go!")
-
-	// struct
-	/*test := ColorPoint{
-		Point: Point{3, 4},
-		Color: color.RGBA{G: 225, B: 225, A: 1},
+	http.HandleFunc("/", httpTest)           //设置访问的路由
+	err := http.ListenAndServe(":9090", nil) //设置监听的端口
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
 	}
-	fmt.Println(test)*/
+}
 
-	fmt.Println("-----------File Tree--------------")
-	fmt.Println("E:\\config")
-	FileTree("E:\\config", 0)
-	fmt.Println("--------------End-----------------")
+func httpTest(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	fmt.Println(r.Form)
+	fmt.Println("Path", r.URL.Path)
+	fmt.Println("Scheme", r.URL.Scheme)
+	fmt.Println(r.Form["url_long"])
+	for k, v := range r.Form {
+		fmt.Println("Key: ", k)
+		fmt.Println("Value: ", strings.Join(v, ","))
+	}
+	fmt.Fprintf(w, "Hello astaxie!")
 }
 
 func FileTree(filePath string, level int) {
