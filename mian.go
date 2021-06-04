@@ -4,17 +4,56 @@ import (
 	"fmt"
 	"image/color"
 	"io/ioutil"
-	"log"
+	"math/rand"
 	"net/http"
+	"os"
+	"runtime/pprof"
 	"strings"
+	"time"
 )
 
 func main() {
-	http.HandleFunc("/", httpTest)           //设置访问的路由
+	/*http.HandleFunc("/", httpTest)           //设置访问的路由
 	err := http.ListenAndServe(":9090", nil) //设置监听的端口
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
+	}*/
+	// CPU性能数据
+	pprof.StartCPUProfile(os.Stdout)
+	defer pprof.StopCPUProfile()
+	n := 10
+	for i := 0; i < 5; i++ {
+		nums := generate(n)
+		bubbleSort(nums)
+		n *= 10
 	}
+	fmt.Println(n)
+}
+
+func generate(n int) []int {
+	rand.Seed(time.Now().UnixNano())
+	nums := make([]int, 0)
+	for i := 0; i < n; i++ {
+		nums = append(nums, rand.Int())
+	}
+	return nums
+}
+
+func bubbleSort(nums []int) {
+	for i := 0; i < len(nums); i++ {
+		for j := 1; j < len(nums)-i; j++ {
+			if nums[j] < nums[j-1] {
+				nums[j], nums[j-1] = nums[j-1], nums[j]
+			}
+		}
+	}
+}
+
+func Fib(n int) int {
+	if n == 0 || n == 1 {
+		return n
+	}
+	return Fib(n-1) + Fib(n-2)
 }
 
 func httpTest(w http.ResponseWriter, r *http.Request) {
