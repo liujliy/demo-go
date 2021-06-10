@@ -7,9 +7,10 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"runtime/pprof"
+	"reflect"
 	"strings"
 	"time"
+	"unsafe"
 )
 
 func main() {
@@ -19,7 +20,7 @@ func main() {
 		log.Fatal("ListenAndServe: ", err)
 	}*/
 	// CPU性能数据
-	pprof.StartCPUProfile(os.Stdout)
+	/*pprof.StartCPUProfile(os.Stdout)
 	defer pprof.StopCPUProfile()
 	n := 10
 	for i := 0; i < 5; i++ {
@@ -27,7 +28,43 @@ func main() {
 		bubbleSort(nums)
 		n *= 10
 	}
-	fmt.Println(n)
+	fmt.Println(n)*/
+
+	// array/slice
+	/*words := []string{"GO", "Java", "C++"}
+	for i, s := range words {
+		words = append(words, "test")
+		fmt.Println(i, s)
+	}
+	fmt.Println(words)
+
+	// map
+	testMap := map[string]int{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+	}
+	for k, v := range testMap {
+		fmt.Println(k, v)
+	}
+
+	// chan
+	ch := make(chan string)
+	go func() {
+		ch <- "Go"
+		ch <- "Java"
+		ch <- "C++"
+		close(ch)
+	}()
+	for n := range ch {
+		fmt.Println(n)
+	}*/
+	os.Setenv("CONFIG_NAME", "global_server")
+	os.Setenv("CONFIG_IP", "10.0.0.1")
+	os.Setenv("CONFIG_URL", "geektutu.com")
+	c := readConfig()
+	fmt.Printf("%+v", c)
+	fmt.Println(unsafe.Sizeof(c))
 }
 
 func generate(n int) []int {
@@ -104,4 +141,33 @@ type Point struct {
 type ColorPoint struct {
 	Point
 	Color color.RGBA
+}
+
+type MakeTemplate struct {
+	ptr *[]int
+	len int
+	cap int
+}
+
+type Config struct {
+	Name string `json:"name"`
+	IP   string `json:"ip"`
+	URL  string `json:"url"`
+}
+
+func readConfig() *Config {
+	config := Config{}
+	// 反射
+	typ := reflect.TypeOf(config)
+	value := reflect.Indirect(reflect.ValueOf(&config))
+	for i := 0; i < typ.NumField(); i++ {
+		f := typ.Field(i)
+		if v, ok := f.Tag.Lookup("json"); ok {
+			key := fmt.Sprintf("CONFIG_%s", strings.ReplaceAll(strings.ToUpper(v), "-", "_"))
+			if env, exist := os.LookupEnv(key); exist {
+				value.FieldByName(f.Name).Set(reflect.ValueOf(env))
+			}
+		}
+	}
+	return &config
 }
