@@ -9,8 +9,8 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
-	"unsafe"
 )
 
 func main() {
@@ -59,12 +59,30 @@ func main() {
 	for n := range ch {
 		fmt.Println(n)
 	}*/
-	os.Setenv("CONFIG_NAME", "global_server")
+	/*os.Setenv("CONFIG_NAME", "global_server")
 	os.Setenv("CONFIG_IP", "10.0.0.1")
 	os.Setenv("CONFIG_URL", "geektutu.com")
 	c := readConfig()
 	fmt.Printf("%+v", c)
-	fmt.Println(unsafe.Sizeof(c))
+	fmt.Println(unsafe.Sizeof(c))*/
+
+	for i := 0; i < 10; i++ {
+		go printOnce(100)
+	}
+	time.Sleep(time.Second)
+}
+
+var m sync.Mutex
+
+var testS = make(map[int]bool, 0)
+
+func printOnce(num int) {
+	m.Lock()
+	if _, exist := testS[num]; !exist {
+		fmt.Println(num)
+	}
+	testS[num] = true
+	m.Unlock()
 }
 
 func generate(n int) []int {
